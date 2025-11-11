@@ -46,7 +46,7 @@ use crate::models::KeyCode;
 pub use config::DroidConfig;
 use device::DeviceController;
 use error::{DroidError, Result};
-use image::GenericImageView;
+use image::{DynamicImage, GenericImageView};
 pub use models::Target;
 use std::path::Path;
 use std::time::Duration;
@@ -158,6 +158,17 @@ impl Droid {
         std::thread::sleep(duration);
     }
 
+    /// Takes a screenshot of the current device screen and returns it as an image object.
+    ///
+    /// This is the programmatic alternative to `snapshot`, which saves the image to a file.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing an `image::DynamicImage` on success.
+    pub fn screenshot(&mut self) -> Result<DynamicImage> {
+        self.controller.screenshot()
+    }
+
     /// Takes a screenshot of the current device screen and saves it to a file.
     ///
     /// # Arguments
@@ -166,7 +177,7 @@ impl Droid {
     pub fn snapshot<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let path_ref = path.as_ref();
         log::info!("Saving snapshot to {:?}", path_ref);
-        let image = self.controller.screenshot()?;
+        let image = self.screenshot()?;
         image.save(path_ref)?;
         Ok(())
     }
