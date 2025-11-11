@@ -1,0 +1,92 @@
+name: CI & Release
+
+on:
+  # 在推送到 main 分支时运行
+  push:
+    branches: ["main"]
+  # 在向 main 分支发起 Pull Request 时运行
+  pull_request:
+    branches: ["main"]
+  # 允许手动触发发布流程
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to publish (e.g., 0.1.1)"
+        required: true
+        type: string
+
+# 2. 定义环境变量
+env:
+  CARGO_TERM_COLOR: always
+
+# 3. 定义工作任务
+jobs:
+  # ==================================================
+  # Job 1: 构建、检查和测试
+  # ==================================================
+  build_and_test:
+    name: Build, Check & Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      # 步骤 1: 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步骤 2: 安装 Rust 工具链
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # 步骤 3: 缓存依赖项 (加速构建)
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # 步骤 4: 检查代码格式
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      # 步骤 5: 运行 Clippy 代码风格检查
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+
+      # 步骤 6: 运行测试
+      - name: Run tests
+        run: cargo test --verbose
+
+  # ==================================================
+  # Job 2: 发布到 Crates.io
+  # ==================================================
+  publish:
+    name: Publish to Crates.io
+    # 仅在手动触发 (workflow_dispatch) 时运行此 Job
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: build_and_test # 依赖于 build_and_test Job 成功完成
+
+    steps:
+      # 步骤 1: 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步骤 2: 安装 Rust 工具链
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      # 步骤 3: 登录到 Crates.io
+      # 使用存储在 GitHub Secrets 中的 API 令牌
+      - name: Log in to Crates.io
+        run: cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      # 步骤 4: 更新 Cargo.toml 中的版本号
+      # 使用 sed 命令替换版本号为手动输入的值
+      - name: Update version in Cargo.toml
+        run: sed -i 's/^version = ".*"/version = "${{ github.event.inputs.version }}"/' Cargo.toml
+
+      # 步骤 5: 发布 Crate
+      - name: Publish crate
+        run: cargo publish
