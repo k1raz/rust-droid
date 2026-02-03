@@ -18,7 +18,6 @@ impl Rect {
         }
     }
 
-    /// 计算矩形的中心点
     pub fn center(&self) -> Point {
         Point {
             x: self.x + self.width / 2,

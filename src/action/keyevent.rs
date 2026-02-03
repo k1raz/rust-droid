@@ -1,7 +1,6 @@
 use crate::{Droid, Result, models::KeyCode};
 use std::time::Duration;
 
-/// 用于构建和执行 "keyevent" (按键事件) 操作。
 pub struct KeyeventBuilder<'a> {
     droid: &'a mut Droid,
     key_code: KeyCode,
@@ -17,13 +16,11 @@ impl<'a> KeyeventBuilder<'a> {
         }
     }
 
-    /// 设置按键次数。
     pub fn times(mut self, count: u32) -> Self {
         self.times = count;
         self
     }
 
-    /// 执行按键操作。
     pub fn execute(self) -> Result<()> {
         log::info!(
             "Executing keyevent {:?} for {} times",

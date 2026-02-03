@@ -12,9 +12,6 @@ pub struct DeviceController {
 }
 
 impl DeviceController {
-    /// 创建一个新的设备控制器。
-    /// 如果 `device_identifier` 是 Some，则连接到指定设备。
-    /// 如果是 None，则自动连接到第一个可用的设备。
     pub fn new(device_identifier: Option<&str>, adb_addr: SocketAddrV4) -> Result<Self> {
         let mut server = ADBServer::new(adb_addr);
 
@@ -61,7 +58,6 @@ impl DeviceController {
             .map_err(|e| DroidError::AdbError(format!("Shell output is not valid UTF-8: {}", e)))
     }
 
-    /// 截取当前设备屏幕
     pub fn screenshot(&mut self) -> Result<DynamicImage> {
         log::debug!("Capturing screenshot...");
         let png_data = self
@@ -79,7 +75,6 @@ impl DeviceController {
         Ok(())
     }
 
-    /// 在屏幕上滑动
     pub fn swipe(&mut self, start: Point, end: Point, duration: Duration) -> Result<()> {
         let cmd = format!(
             "input swipe {} {} {} {} {}",
@@ -102,10 +97,32 @@ impl DeviceController {
         Ok(())
     }
 
-    /// 发送一个按键事件
     pub fn input_keyevent(&mut self, key_code: i32) -> Result<()> {
         let cmd = format!("input keyevent {}", key_code);
         self.shell(&cmd)?;
+        Ok(())
+    }
+
+    /// Launches an app by package name using the launcher intent.
+    pub fn launch_app(&mut self, package: &str) -> Result<()> {
+        let cmd = format!(
+            "monkey -p {} -c android.intent.category.LAUNCHER 1",
+            package
+        );
+        let output = self.shell(&cmd)?;
+        let normalized = output.to_lowercase();
+        if normalized.contains("no activities found")
+            || normalized.contains("unable to resolve intent")
+            || normalized.contains("activity not started")
+        {
+            return Err(DroidError::PackageNotFound(package.to_string()));
+        }
+        if normalized.contains("monkey aborted") || normalized.contains("error") {
+            return Err(DroidError::AppLaunchFailed {
+                package: package.to_string(),
+                output: output.trim().to_string(),
+            });
+        }
         Ok(())
     }
 }

@@ -20,3 +20,4 @@ imageproc = "0.25"
 [dev-dependencies]
 anyhow = "1.0"
 env_logger = "0.11"
+rand = "0.8"

@@ -1632,6 +1632,7 @@ dependencies = [
  "image",
  "imageproc",
  "log",
+ "rand 0.8.5",
  "thiserror 2.0.17",
 ]
 

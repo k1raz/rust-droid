@@ -1,36 +1,3 @@
-//! A simple and fluent Android automation library for Rust.
-//!
-//! `rust-droid` provides a high-level API to control Android devices via ADB
-//! (Android Debug Bridge). It is inspired by popular automation tools like
-//! Airtest, with a focus on ease of use and a fluent, builder-style API.
-//!
-//! # Quick Start
-//!
-//! ```no_run
-//! use rust_droid::{Droid, DroidConfig, Target, models::KeyCode};
-//! use std::path::PathBuf;
-//! use std::time::Duration;
-//!
-//! fn main() -> anyhow::Result<()> {
-//!     // 1. Create a Droid instance.
-//!     let mut droid = Droid::new(DroidConfig::default())?;
-//!
-//!     // 2. Define a target image.
-//!     let settings_icon = Target::from("path/to/your/settings_icon.png");
-//!
-//!     // 3. Wait for the icon to appear and get its position.
-//!     let icon_position = droid.wait_for(settings_icon).execute()?;
-//!
-//!     // 4. Tap the icon.
-//!     droid.touch(icon_position.into()).execute()?;
-//!
-//!     // 5. Press the back button.
-//!     droid.keyevent(KeyCode::Back).execute()?;
-//!
-//!     Ok(())
-//! }
-//! ```
-
 pub mod action;
 pub mod common;
 pub mod config;
@@ -47,7 +14,7 @@ pub use config::DroidConfig;
 use device::DeviceController;
 use error::{DroidError, Result};
 use image::{DynamicImage, GenericImageView};
-pub use models::Target;
+pub use models::{AppPackages, Target, TIKTOK_LIKE_POINT};
 use std::path::Path;
 use std::time::Duration;
 
@@ -187,5 +154,15 @@ impl Droid {
     /// Returns a `KeyeventBuilder` to configure and execute the action.
     pub fn keyevent(&mut self, key_code: KeyCode) -> action::keyevent::KeyeventBuilder<'_> {
         action::keyevent::KeyeventBuilder::new(self, key_code)
+    }
+
+    /// Launches an app by package name using the launcher intent.
+    pub fn launch_app(&mut self, package: &str) -> Result<()> {
+        self.controller.launch_app(package)
+    }
+
+    /// Launches an app using a predefined package identifier.
+    pub fn launch_app_package(&mut self, package: AppPackages) -> Result<()> {
+        self.controller.launch_app(package.as_str())
     }
 }

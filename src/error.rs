@@ -27,6 +27,12 @@ pub enum DroidError {
 
     #[error("GPU/OpenCL error: {0}")]
     GpuError(String),
+
+    #[error("App package not found or has no launcher activity: {0}")]
+    PackageNotFound(String),
+
+    #[error("Failed to launch app '{package}': {output}")]
+    AppLaunchFailed { package: String, output: String },
 }
 
 pub type Result<T> = std::result::Result<T, DroidError>;

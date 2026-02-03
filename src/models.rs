@@ -45,3 +45,30 @@ pub enum KeyCode {
     Back = 4,
     Enter = 66,
 }
+
+#[derive(Debug, Clone, Copy)]
+pub enum AppPackages {
+    Tiktok,
+    Instagram,
+    Facebook,
+    Youtube,
+    Telegram,
+    Whatsapp,
+    Chrome,
+}
+
+impl AppPackages {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AppPackages::Tiktok => "com.zhiliaoapp.musically",
+            AppPackages::Instagram => "com.instagram.android",
+            AppPackages::Facebook => "com.facebook.katana",
+            AppPackages::Youtube => "com.google.android.youtube",
+            AppPackages::Telegram => "org.telegram.messenger",
+            AppPackages::Whatsapp => "com.whatsapp",
+            AppPackages::Chrome => "com.android.chrome",
+        }
+    }
+}
+
+pub const TIKTOK_LIKE_POINT: Point = Point { x: 656, y: 710 };
